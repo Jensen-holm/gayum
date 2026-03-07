@@ -1,17 +1,13 @@
 [project]
-name = "gamjam"
+name = "gayum"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
-    "formulaic>=1.2.1",
-    "jax>=0.9.1",
-    "polars>=1.38.1",
-]
+dependencies = ["jax>=0.9.1", "narwhals>=2.17.0", "polars>=1.38.1"]
 
 [tool.setuptools.package-data]
-gamjam = "gamjam/*"
+gamjam = ["gayum/*"]
 
 [tool.pytest.ini_options]
 pythonpath = "."
