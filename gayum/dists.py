@@ -1,7 +1,7 @@
-from abc import ABCMeta
+from abc import ABC
 
 
-class Dist(ABCMeta):
+class Dist(ABC):
     ...
 
 
