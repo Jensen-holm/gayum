@@ -1,42 +1,33 @@
 from narwhals.typing import Frame
-from typing import Optional
-import narwhals as nw
 import jax.numpy as jnp
+import narwhals as nw
 import jax
 
 from .dists import Dist
-from .terms import Term
-from .exceptions import DataTypeError
+from .formula import Formula
 
 
 __all__ = ['GAM']
 
 
 class GAM:
-    __slots__ = ['dist', 'terms', '_features', '_target']
+    __slots__ = ['dist', 'formula']
 
-    def __init__(self, dist: Dist, terms: list[Term]):
+    def __init__(self, dist: Dist, formula: Formula):
         assert isinstance(dist, Dist)
-        assert isinstance(terms, list)
-        assert all([isinstance(t, Term) for t in terms])
+        assert isinstance(formula, Formula)
 
         self.dist: Dist = dist
-        self.terms: list[Term] = terms
-        self._features: list[str] = []
-        self._target: Optional[str] = None
+        self.formula: Formula = formula
     
+    @nw.narwhalify
     def _to_jnp(self, *args) -> jax.Array | tuple[jax.Array, ...]:
         """convert dataframes from whatever backend into jax arrays"""
 
-        def __convert(x) -> jax.Array:
-            try:
-                nw_df = nw.from_native(x, eager_only=True)
-                return jnp.array(nw_df.to_numpy())
-            except TypeError:
-                raise DataTypeError(invalid_type=str(type(x)))
+        def __convert(x: Frame) -> jax.Array:
+            return jnp.array(x.to_numpy())
 
         converted = [__convert(x) for x in args]
-        
         if len(converted) == 1:
             return converted[0]
         return tuple(converted)
