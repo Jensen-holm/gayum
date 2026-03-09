@@ -1,20 +1,21 @@
 import pytest
-import gayum
 import pandas as pd
 import polars as pl
-import random
+from plotnine.data import mtcars
 
-@pytest.fixture
-def generic_GAM() -> gayum.GAM:
-    return gayum.GAM(dist=gayum.dists.Normal(), terms=[gayum.terms.s()])
-
-
-@pytest.fixture
-def random_pd_df():
-    return pd.DataFrame({'col': [random.random() * 1000 for _ in range(100)]})
+import gayum
+from gayum.terms import s
 
 
 @pytest.fixture
-def random_pl_df():
-    return pl.DataFrame({'col': [random.random() * 1000 for _ in range(100)]})
+def mtcars_pd() -> pd.DataFrame:
+    return mtcars
 
+@pytest.fixture
+def mtcars_pl() -> pl.DataFrame:
+    return pl.from_pandas(mtcars)
+
+@pytest.fixture
+def mtcarsGAM() -> gayum.GAM:
+    f = gayum.Formula(mtcars, 'mpg', s('hp') + s('wt'))
+    return gayum.GAM(dist=gayum.dists.Normal(), formula=f)

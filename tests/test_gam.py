@@ -1,17 +1,20 @@
 import pytest
-import gayum
 import jax
 
+from gayum.terms import s
+import gayum
 
 
-def test_gam_class_init():
+def test_gam_class_init(mtcars_pl):
     with pytest.raises(TypeError):
         gayum.GAM()
     
-    _ = gayum.GAM(dist=gayum.dists.Normal(), terms=[gayum.terms.s()])
+    f = gayum.Formula(mtcars_pl, 'mpg', s('hp') + s('wt'))
+    _ = gayum.GAM(dist=gayum.dists.Normal(), formula=f)
 
 
-def test_df_to_jnp(generic_GAM, random_pd_df, random_pl_df):
-    result1, result2 = generic_GAM._to_jnp(random_pd_df, random_pl_df)
+def test_df_to_jnp(mtcarsGAM, mtcars_pl):
+    X, y = mtcars_pl[['hp', 'wt']], mtcars_pl['mpg']
+    result1, result2 = mtcarsGAM._to_jnp(X, y)
     assert isinstance(result1, jax.Array)
     assert isinstance(result2, jax.Array)
