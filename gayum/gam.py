@@ -36,8 +36,9 @@ class GAM:
     def _fit_init(self, X: Frame, y: Frame) -> tuple[jax.Array, jax.Array]:
         assert len(y.columns) == 1, f'too many columns in y dataframe |{len(y.columns)}| max is 1'
 
-        self._features = X.columns
-        self._target = y.columns
+        for t in self.formula.terms:
+            t.build(self._to_jnp(X.select(t.col)))
+
         return self._to_jnp(X, y)
     
     @nw.narwhalify
