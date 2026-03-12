@@ -25,7 +25,7 @@ class GAM:
         """convert dataframes from whatever backend into jax arrays"""
 
         def __convert(x: Frame) -> jax.Array:
-            return jnp.array(x.to_numpy())
+            return jnp.array(x.to_numpy()).squeeze()
 
         converted = [__convert(x) for x in args]
         if len(converted) == 1:

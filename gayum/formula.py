@@ -5,7 +5,7 @@ from .terms import Term
 
 
 class Formula:
-    __slots__ = ['response', 'terms']
+    __slots__ = ['response', 'features', 'terms']
 
     @nw.narwhalify
     def __init__(self, df: Frame, response: str, terms: list[Term]):
@@ -14,3 +14,4 @@ class Formula:
 
         self.terms = terms
         self.response = response
+        self.features: list[str] = [t.col for t in terms]
