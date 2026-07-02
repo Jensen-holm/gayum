@@ -8,7 +8,9 @@ class Formula:
     __slots__ = ['response', 'features', 'terms']
 
     @nw.narwhalify
-    def __init__(self, df: Frame, response: str, terms: list[Term]):
+    def __init__(self, df: Frame, response: str, terms: list[Term] | Term):
+        if isinstance(terms, Term):
+            terms = [terms]
         assert response in df.columns
         assert all([x.col in df.columns for x in terms])
 

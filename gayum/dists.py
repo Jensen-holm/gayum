@@ -28,7 +28,9 @@ class Dist(ABC):
 
 class Normal(Dist):
     """Normal (Gaussian) distribution with identity link"""
-    
+
+    profile_dispersion = True  # σ² is unknown and must be profiled out in REML
+
     def __init__(self, sigma: float = 1.0):
         self.sigma = sigma
     
