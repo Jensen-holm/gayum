@@ -40,10 +40,42 @@ class GAM:
     def _fit_init(self, X: Frame, y: Frame) -> tuple[jax.Array, jax.Array]:
         assert len(y.columns) == 1, f'too many columns in y dataframe |{len(y.columns)}| max is 1'
 
+        self._resolve_term_basis_dimensions(X)
+
         for t in self.formula.terms:
             t.build(self._to_jnp(X.select(t.col)))
 
         return self._to_jnp(X, y)
+
+    @nw.narwhalify
+    def _resolve_term_basis_dimensions(self, X: Frame) -> None:
+        """Resolve per-term basis dimensions before basis construction.
+
+        For thin-plate terms, this follows an mgcv-like default of k=10 for
+        1D smooths, while adding a small-sample guard for additive models with
+        multiple smooth terms. This keeps the API simple (users can omit k)
+        and avoids unstable over-parameterized bases on tiny datasets.
+        """
+        n_obs = len(X)
+        n_terms = len(self.formula.terms)
+        min_k = 3
+
+        for t in self.formula.terms:
+            if not hasattr(t, 'k'):
+                continue
+
+            x = np.asarray(self._to_jnp(X.select(t.col)))
+            n_unique = int(np.unique(x).shape[0])
+            unique_cap = max(min_k, n_unique - 1)
+
+            if t.k is None:
+                default_k = 10
+                # Keep enough data support per smooth in small multivariate fits.
+                sample_cap = max(min_k, n_obs // max(1, 3 * n_terms))
+                t.k = int(max(min_k, min(default_k, sample_cap, unique_cap)))
+            else:
+                # Respect explicit user k, but cap by unique x support.
+                t.k = int(max(min_k, min(int(t.k), unique_cap)))
 
     def _build_design_matrix(self) -> jax.Array:
         n = self.formula.terms[0].basis_mat.shape[0]

@@ -79,9 +79,9 @@ class tp(Term):
     """Thin plate regression spline (mgcv's default s() basis)."""
     __slots__ = ['col', 'k', 'basis_mat', 'x', '_knots', '_Q2', '_U', '_d', '_Z', '_x_min', '_x_range']
 
-    def __init__(self, col: str, k: int = 10):
+    def __init__(self, col: str, k: int | None = None):
         self.col: str = col
-        self.k: int = k
+        self.k: int | None = k
         self.basis_mat: Optional[jax.Array] = None
         self.x: Optional[jax.Array] = None
         self._knots: Optional[jax.Array] = None
@@ -101,6 +101,13 @@ class tp(Term):
         return jnp.concatenate([t, b_smooth])
 
     def build(self, x: jax.Array) -> "tp":
+        if self.k is None:
+            # mgcv uses k=10 by default for 1D smooths; GAM may lower this
+            # automatically for small samples before build() is called.
+            self.k = 10
+        if self.k < 3:
+            raise ValueError(f'k must be >= 3 for tp smooths, got {self.k}')
+
         self.x = x  # kept in original scale for partial_effects/plot
 
         # Scale x to [0, 1] — mgcv normalises to unit range internally.
@@ -133,7 +140,7 @@ class tp(Term):
         # Project E_k and eigendecompose; take the top r = k-2 eigenvectors
         E_proj = Q2.T @ E_k @ Q2             # (K-2, K-2)
         d_all, U_all = jnp.linalg.eigh(E_proj)  # ascending order
-        r = min(self.k - 2, K - 2)
+        r = min(int(self.k) - 2, K - 2)
         d_r = jnp.maximum(d_all[-r:], 1e-8) # largest r eigenvalues, clipped
         U_r = U_all[:, -r:]
         self._d = d_r
